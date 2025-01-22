@@ -4,8 +4,8 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { getTask, updateTask, deleteTaskAPI } from "../util/api";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import EditTaskModal from "../modal/EditTaskModal";
 import SearchFilter from "./SearchFilter";
+import CustomTaskModal from "../modal/CustomTaskModal";
 
 const Task = ({
   task,
@@ -332,11 +332,10 @@ const TaskBoard = ({ addTask, role }) => {
       </div>
 
       {isModalOpen && (
-        <EditTaskModal
-          editTaskToggle={closeModal}
+        <CustomTaskModal
+          toggleModal={closeModal}
           editTask={taskToEdit}
-          taskId={taskToEdit.id}
-          toRefresh={getTaskData}
+          getTaskData={getTaskData}
         />
       )}
     </DndProvider>

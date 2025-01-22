@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "../sharedcomponent/Navbar";
 import TaskBoard from "../sharedcomponent/TaskBoard";
-import AddTaskModal from "../modal/AddTaskModal";
+import CustomTaskModal from "../modal/CustomTaskModal";
 
 export default function Task() {
   const name = localStorage.getItem("name");
@@ -37,7 +37,7 @@ export default function Task() {
       <div style={{ paddingTop: "70px" }} className="px-20">
         <TaskBoard addTask={addTask} role={role} />
       </div>
-      <AddTaskModal addTaskToggle={addTaskToggle} addTask={addTask} />
+      <CustomTaskModal toggleModal={addTaskToggle} addTask={addTask} />
     </div>
   );
 }

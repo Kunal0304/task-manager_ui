@@ -1,29 +1,30 @@
 import React, { useEffect, useState } from "react";
 import Alert from "../sharedcomponent/Alert";
 import Loader from "../sharedcomponent/Loader";
-import { getAllUser } from "../util/api";
-import { updateTask } from "../util/api";
-import { getTaskById } from "../util/api";
+import { getAllUser, updateTask } from "../util/api";
+import { postTask } from "../util/api";
 import Select from "react-select";
 
-export default function EditTaskModal({
-  editTaskToggle,
+export default function AddTaskModal({
+  addTask,
   editTask,
-  toRefresh,
-  taskId,
+  toggleModal,
+  getTaskData,
 }) {
   const [loading, setLoading] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alert, setAlert] = useState("");
   const [statusCode, setStatusCode] = useState();
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState();
   const [taskData, setTaskData] = useState({
-    title: "",
-    description: "",
-    priority: "Medium",
-    assignedUsers: [],
-    dueDate: "",
-    status: "Todo",
+    title: editTask ? editTask?.title : "",
+    description: editTask ? editTask?.description : "",
+    priority: editTask ? editTask?.priority : "Medium",
+    assignedUsers: editTask ? editTask?.assignedUsers : [],
+    dueDate: editTask
+      ? new Date(editTask.dueDate).toISOString().split("T")[0]
+      : "",
+    status: editTask ? editTask?.status : "Todo",
   });
   const [errors, setErrors] = useState({});
 
@@ -46,48 +47,25 @@ export default function EditTaskModal({
   };
 
   useEffect(() => {
-    const fetchTask = async () => {
-      const token = localStorage.getItem("token");
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
-      try {
-        setLoading(true);
-        const response = await getTaskById(taskId, headers);
-        if (response.status === 200) {
-          const task = response.data;
-          const formattedDueDate = task.dueDate
-            ? new Date(task.dueDate).toISOString().split("T")[0]
-            : "";
-
-          setTaskData({
-            ...task,
-            dueDate: formattedDueDate,
-          });
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUser();
-    if (taskId) {
-      fetchTask();
-    }
-  }, [taskId]);
+  }, []);
 
-  const handleChange = (e, fieldName) => {
-    if (e && e.target) {
-      const { name, value } = e.target;
+  const handleChange = (e) => {
+    const { name, value, type, selectedOptions } = e.target;
+
+    if (type !== "select-multiple") {
       setTaskData({ ...taskData, [name]: value });
-      setErrors({ ...errors, [name]: "" });
-    } else if (e && e.map) {
-      const selectedUsers = e.map((option) => option.value);
-      setTaskData({ ...taskData, assignedUsers: selectedUsers });
-      setErrors({ ...errors, [fieldName]: "" });
     }
+
+    if (type === "select-multiple") {
+      const selectedUsers = Array.from(
+        selectedOptions,
+        (option) => option.value
+      );
+      setTaskData({ ...taskData, [name]: selectedUsers });
+    }
+
+    setErrors({ ...errors, [name]: "" });
   };
 
   const validateForm = () => {
@@ -95,8 +73,9 @@ export default function EditTaskModal({
     if (!taskData.title) newErrors.title = "Title is required";
     if (!taskData.description)
       newErrors.description = "Description is required";
-    if (taskData.assignedUsers.length === 0)
-      newErrors.assignedUsers = "At least one user must be assigned";
+    if (!taskData.assignedUsers || taskData.assignedUsers.length === 0) {
+      newErrors.assignedUsers = "Assigned user is required";
+    }
     if (!taskData.dueDate) newErrors.dueDate = "Due date is required";
     if (!taskData.priority) newErrors.priority = "Priority is required";
 
@@ -104,7 +83,7 @@ export default function EditTaskModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const updateTaskButton = async (e) => {
+  const AddTaskButton = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -115,13 +94,28 @@ export default function EditTaskModal({
 
     try {
       setLoading(true);
-      const response = await updateTask(taskId, taskData, headers);
+      // const response = await postTask(taskData, headers);
+      let response;
+      if (editTask) {
+        response = await updateTask(editTask.id, taskData, headers);
+      } else {
+        response = await postTask(taskData, headers);
+      }
+
       if (response.status === 200) {
         setAlertMessage(response.data.message);
         setAlert(true);
         setStatusCode(response.status);
-        editTaskToggle();
-        toRefresh();
+        toggleModal();
+        setTaskData({
+          title: "",
+          description: "",
+          priority: "Medium",
+          assignedUsers: [],
+          dueDate: "",
+          status: "Todo",
+        });
+        editTask && getTaskData();
       }
     } catch (error) {
       setStatusCode(error.response?.status || 500);
@@ -132,6 +126,18 @@ export default function EditTaskModal({
     }
   };
 
+  const handleClose = () => {
+    setTaskData({
+      title: "",
+      description: "",
+      priority: "Medium",
+      assignedUsers: [],
+      dueDate: "",
+      status: "Todo",
+    });
+    toggleModal();
+  };
+
   return (
     <div>
       <div
@@ -140,7 +146,7 @@ export default function EditTaskModal({
         tabIndex="-1"
         aria-hidden="true"
         className={`fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-full bg-black/50 transition-opacity ${
-          editTask ? "visible opacity-100" : "invisible opacity-0"
+          addTask || editTask ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
         {alert && (
@@ -159,13 +165,13 @@ export default function EditTaskModal({
           <div className="relative bg-slate-100 rounded-lg shadow max-h-full overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-black">
-                Edit Task
+                {editTask ? " Edit Task" : "Add Task"}
               </h3>
               <button
                 type="button"
                 className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                 data-modal-hide="static-modal"
-                onClick={editTaskToggle}
+                onClick={handleClose}
               >
                 <svg
                   className="w-3 h-3"
@@ -209,7 +215,6 @@ export default function EditTaskModal({
                     <span className="text-sm text-red-500">{errors.title}</span>
                   )}
                 </div>
-
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label
@@ -261,6 +266,7 @@ export default function EditTaskModal({
                     )}
                   </div>
                 </div>
+
                 <div>
                   <label
                     htmlFor="assignedUsers"
@@ -303,6 +309,7 @@ export default function EditTaskModal({
                     </span>
                   )}
                 </div>
+
                 <div>
                   <label
                     htmlFor="description"
@@ -334,15 +341,15 @@ export default function EditTaskModal({
                 data-modal-hide="static-modal"
                 type="button"
                 className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-                onClick={updateTaskButton}
+                onClick={AddTaskButton}
               >
-                Update
+                {editTask ? "Update" : "Create"}
               </button>
               <button
                 data-modal-hide="static-modal"
                 type="button"
                 className="py-2.5 px-5 ms-3 text-sm font-medium text-white bg-red-500 rounded-lg border border-transparent hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 dark:bg-red-700 dark:hover:bg-red-800"
-                onClick={editTaskToggle}
+                onClick={handleClose}
               >
                 Close
               </button>
