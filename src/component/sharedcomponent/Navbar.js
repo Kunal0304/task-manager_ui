@@ -8,7 +8,7 @@ export default function Navbar({ name, role }) {
   const [toggleMenu, setToggleMenu] = useState(false);
 
   const nameDisplay = name;
-  const firstLetter = name.charAt(0).toUpperCase();
+  const firstLetter = name?.charAt(0).toUpperCase();
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
