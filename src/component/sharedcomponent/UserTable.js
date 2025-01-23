@@ -6,8 +6,8 @@ import EditIcon from "./EditIcon";
 import DeleteIcon from "./DeleteIcon";
 import { deleteUser } from "../util/api";
 import Alert from "./Alert";
-import EditUserModal from "../modal/EditUserModal";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import CustomUserModal from "../modal/CustomUserModal";
+import { useNavigate  } from "react-router-dom";
 
 export default function UserTable({ refreshUsers }) {
   const [loading, setLoading] = useState(false);
@@ -15,8 +15,9 @@ export default function UserTable({ refreshUsers }) {
   const [alert, setAlert] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [statusCode, setStatuscode] = useState();
-  const [editUserModal, setEditUserModal] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [userModal, setUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState({});
+  const navigate = useNavigate ();
 
   useEffect(() => {
     fetchUser();
@@ -29,7 +30,7 @@ export default function UserTable({ refreshUsers }) {
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
     const headers = {
-      Authorization: `$Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
     try {
       setLoading(true);
@@ -38,21 +39,24 @@ export default function UserTable({ refreshUsers }) {
         setData(response.data);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.log(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleEdit = (id) => {
-    setSelectedUserId(id);
-    setEditUserModal((prev) => !prev);
+  const toggleEdit = (user) => {
+    setSelectedUser(user);
+    setUserModal((prev) => !prev);
   };
 
   const deleteUserFucn = async (id) => {
     const token = localStorage.getItem("token");
     const headers = {
-      Authorization: `$Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
     try {
       setLoading(true);
@@ -64,6 +68,9 @@ export default function UserTable({ refreshUsers }) {
         fetchUser();
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       setAlert(true);
       setStatuscode(error.response.status);
       setAlertMessage(
@@ -133,7 +140,7 @@ export default function UserTable({ refreshUsers }) {
                 </td>
                 <td className="border border-gray-300 text-center px-2 py-2 text-sm sm:text-base">
                   <div className="flex justify-center gap-2">
-                    <button onClick={() => toggleEdit(user.id)}>
+                    <button onClick={() => toggleEdit(user)}>
                       <EditIcon />
                     </button>
                     <button onClick={() => deleteUserFucn(user.id)}>
@@ -148,12 +155,13 @@ export default function UserTable({ refreshUsers }) {
         </table>
       </div>
 
-      {editUserModal && (
-        <EditUserModal
-          toggleEdit={toggleEdit}
-          editUserModal={editUserModal}
-          selectedUserId={selectedUserId}
-          updatedUser={updatedUser}
+      {userModal && (
+        <CustomUserModal
+          isEditMode={true}
+          toggleModal={toggleEdit}
+          userModal={userModal}
+          selectedUser={selectedUser}
+          updatedUserList={updatedUser}
         />
       )}
     </div>

@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 import Navbar from "../sharedcomponent/Navbar";
 import UserTable from "../sharedcomponent/UserTable";
-import AddUserModal from "../modal/AddUserModal";
+import CustomUserModal from "../modal/CustomUserModal";
 
 export default function User() {
   const name = localStorage.getItem("name");
   const role = localStorage.getItem("role");
   const [userModal, setUserModal] = useState(false);
   const [refreshUsers, setRefreshUsers] = useState(false);
-
   const toggleUserModal = () => {
     setUserModal((prev) => !prev);
   };
 
   const handleUserAdded = () => {
-    toggleUserModal();
     setRefreshUsers((prev) => !prev);
   };
 
@@ -46,10 +44,11 @@ export default function User() {
         </div>
       </div>
       {userModal && (
-        <AddUserModal
-          toggleModal={toggleUserModal}
+        <CustomUserModal
+          isEditMode={false}
           userModal={userModal}
-          handleUserAdded={handleUserAdded}
+          toggleModal={toggleUserModal}
+          updatedUserList={handleUserAdded}
         />
       )}
     </div>

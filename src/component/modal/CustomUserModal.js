@@ -1,23 +1,28 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useState } from "react";
 import Alert from "../sharedcomponent/Alert";
 import Loader from "../sharedcomponent/Loader";
-import { getUser } from "../util/api";
-import { updateUser } from "../util/api";
+import { postUser, updateUser } from "../util/api";
+import { useNavigate } from "react-router-dom";
 
-export default function EditUserModal({
-  toggleEdit,
-  editUserModal,
-  selectedUserId,
-  updatedUser,
+export default function CustomUserModal({
+  userModal,
+  selectedUser,
+  toggleModal,
+  updatedUserList,
+  isEditMode
 }) {
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState(selectedUser?.name ||"");
+  const [userName, setUserName] = useState(selectedUser?.userName ||"");
+  const [password, setPassword] = useState("");
+  const [passwordStrengthMessage, setPasswordStrengthMessage] = useState("");
+  const [isPasswordValid, setIsPasswordValid] = useState();
   const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alert, setAlert] = useState("");
-  const [statusCode, setStatuscode] = useState();
+  const [statusCode, setStatusCode] = useState();
+  const navigate = useNavigate ();
 
   const validateEmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
@@ -28,61 +33,77 @@ export default function EditUserModal({
     }
   };
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
-      const headers = {
-        Authorization: `$Bearer ${token}`,
-      };
-      try {
-        setLoading(true);
-        const response = await getUser(selectedUserId, headers);
+  const getPasswordStrengthColor = () => {
+    if (passwordStrengthMessage === "Strong password") {
+      return "text-green-500";
+    } else if (passwordStrengthMessage === "Medium password") {
+      return "text-yellow-500";
+    } else if (passwordStrengthMessage === "Weak password") {
+      return "text-red-500";
+    }
+    return "";
+  };
 
-        if (response.status === 200) {
-          setName(response.data[0].name);
-          setUsername(response.data[0].userName);
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserData();
-  }, [selectedUserId]);
+  const calculatePasswordStrength = (password) => {
+    const strength = password.length;
 
-  const update = async (e) => {
-    e.preventDefault();
-    if (!emailError) {
-      const data = {
-        userName: username.toLocaleLowerCase(),
-        name: name,
-      };
-      const token = localStorage.getItem("token");
-      const headers = {
-        Authorization: `$Bearer ${token}`,
-      };
-      try {
-        setLoading(true);
-        const response = await updateUser(selectedUserId, data, headers);
-        if (response.status === 200) {
-          setAlertMessage(response.data.message);
-          setAlert(true);
-          setStatuscode(response.status);
-          toggleEdit();
-          updatedUser();
-        }
-      } catch (error) {
-        setStatuscode(error.response.status);
-        setAlertMessage(
-          error.response ? error.response.data.message : "Something went wrong!"
-        );
-        setAlert(true);
-      } finally {
-        setLoading(false);
-      }
+    // Add additional checks for password strength
+    if (strength >= 8 && /[A-Z]/.test(password) && /\d/.test(password)) {
+      setPasswordStrengthMessage("Strong password");
+      setIsPasswordValid(true);
+    } else if (strength >= 6) {
+      setPasswordStrengthMessage("Medium password");
+      setIsPasswordValid(false);
+    } else {
+      setPasswordStrengthMessage("Weak password");
+      setIsPasswordValid(false);
     }
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!emailError) {
+    const data = {
+      userName: userName.toLowerCase(),
+      name: name,
+    };
+
+    if (password && !isEditMode) {
+      data.passWord = password;
+      data.role = "User";
+    }
+    const token = localStorage.getItem("token");
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+    try {
+      setLoading(true);
+      let response;
+      if (isEditMode) {
+        response = await updateUser(selectedUser.id, data, headers);
+      } else {
+        response = await postUser(data, headers);
+      }
+      if (response.status === 200) {
+        setAlertMessage(response.data.message);
+        setAlert(true);
+        setStatusCode(response.status);
+        toggleModal();
+        updatedUserList();
+      }
+    } catch (error) {
+      setStatusCode(error.response.status);
+      setAlertMessage(
+        error.response ? error.response.data.message : "Something went wrong!"
+      );
+      setAlert(true);
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+};
 
   return (
     <div>
@@ -92,7 +113,7 @@ export default function EditUserModal({
         tabIndex="-1"
         aria-hidden="true"
         className={`fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-full bg-black/50 transition-opacity ${
-          editUserModal ? "visible opacity-100" : "invisible opacity-0"
+          userModal ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
         {alert && (
@@ -111,13 +132,13 @@ export default function EditUserModal({
           <div className="relative bg-slate-100 rounded-lg shadow ">
             <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-black">
-                Edit User
+              {isEditMode ? "Edit" : "Add"} User  
               </h3>
               <button
                 type="button"
                 className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                 data-modal-hide="static-modal"
-                onClick={toggleEdit}
+                onClick={toggleModal}
               >
                 <svg
                   className="w-3 h-3"
@@ -168,9 +189,9 @@ export default function EditUserModal({
                     </label>
                     <div className="mt-2">
                       <input
-                        value={username}
+                        value={userName}
                         onChange={(e) => {
-                          setUsername(e.target.value);
+                          setUserName(e.target.value);
                           validateEmail(e.target.value);
                         }}
                         id="email"
@@ -187,6 +208,48 @@ export default function EditUserModal({
                       </div>
                     )}
                   </div>
+                  {!isEditMode && (<div>
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor="password"
+                        className="block text-sm/6 font-medium text-gray-900"
+                      >
+                        Password
+                      </label>
+                    </div>
+                    <div className="mt-2">
+                      <input
+                        value={password}
+                        onChange={(e) => {
+                          const newPassword = e.target.value;
+                          setPassword(newPassword);
+                          calculatePasswordStrength(newPassword);
+                        }}
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      />
+                    </div>
+                    {password && (
+                      <div
+                        className={`mt-2 text-sm ${getPasswordStrengthColor()}`}
+                      >
+                        {passwordStrengthMessage}
+                      </div>
+                    )}
+                  </div>)}
+                  {!isPasswordValid && password && (
+                    <div
+                      className="text-sm text-gray-500 mt-2"
+                      style={{ color: "red" }}
+                    >
+                      Password must be at least 8 characters long, contain at
+                      least one uppercase letter, and one number.
+                    </div>
+                  )}
 
                   <div></div>
                 </form>
@@ -197,15 +260,15 @@ export default function EditUserModal({
                 data-modal-hide="static-modal"
                 type="button"
                 className="text-white  bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-                onClick={update}
+                onClick={handleSubmit}
               >
-                Update
+                {isEditMode ? "Update" : "Create"}
               </button>
               <button
                 data-modal-hide="static-modal"
                 type="button"
                 className="py-2.5 px-5 ms-3 text-sm font-medium text-white bg-red-500 rounded-lg border border-transparent hover:bg-red-600 focus:z-10 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 dark:bg-red-700 dark:hover:bg-red-800"
-                onClick={toggleEdit}
+                onClick={toggleModal}
               >
                 Close
               </button>

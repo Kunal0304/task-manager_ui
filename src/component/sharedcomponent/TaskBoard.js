@@ -6,6 +6,7 @@ import { getTask, updateTask, deleteTaskAPI } from "../util/api";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import SearchFilter from "./SearchFilter";
 import CustomTaskModal from "../modal/CustomTaskModal";
+import { useNavigate } from "react-router-dom";
 
 const Task = ({
   task,
@@ -23,6 +24,7 @@ const Task = ({
       isDragging: monitor.isDragging(),
     }),
   });
+  const navigate = useNavigate ();
 
   const formatDate = (date) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -167,6 +169,7 @@ const TaskBoard = ({ addTask, role }) => {
   const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const navigate = useNavigate ();
 
   const getTaskData = async () => {
     const token = localStorage.getItem("token");
@@ -190,6 +193,9 @@ const TaskBoard = ({ addTask, role }) => {
         setTasks(organizedTasks);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.log(error);
     }
   };
@@ -262,6 +268,9 @@ const TaskBoard = ({ addTask, role }) => {
         setTasks(originalTasks);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.log("Error updating task:", error);
       setTasks(originalTasks);
     }
@@ -289,6 +298,9 @@ const TaskBoard = ({ addTask, role }) => {
         setTasks(originalTasks);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.error("Error deleting task:", error);
       setTasks(originalTasks);
     }

@@ -4,6 +4,7 @@ import Loader from "../sharedcomponent/Loader";
 import { getAllUser, updateTask } from "../util/api";
 import { postTask } from "../util/api";
 import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 
 export default function AddTaskModal({
   addTask,
@@ -27,6 +28,7 @@ export default function AddTaskModal({
     status: editTask ? editTask?.status : "Todo",
   });
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate ();
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
@@ -40,6 +42,9 @@ export default function AddTaskModal({
         setUserData(response.data);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.log(error);
     } finally {
       setLoading(false);
@@ -121,6 +126,9 @@ export default function AddTaskModal({
       setStatusCode(error.response?.status || 500);
       setAlertMessage(error.response?.data?.message || "Something went wrong!");
       setAlert(true);
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
     } finally {
       setLoading(false);
     }
