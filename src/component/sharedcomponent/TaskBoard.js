@@ -24,7 +24,6 @@ const Task = ({
       isDragging: monitor.isDragging(),
     }),
   });
-  const navigate = useNavigate ();
 
   const formatDate = (date) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -157,19 +156,38 @@ const Column = ({
   );
 };
 
-const TaskBoard = ({ addTask, role }) => {
+const TaskBoard = ({ addTask, role, isSetCount }) => {
   const [tasks, setTasks] = useState({
     Todo: [],
     InProgress: [],
     Completed: [],
   });
 
+  useEffect(() => {
+    const fetchedTasks = tasks;
+    console.log(fetchedTasks);
+    const todo = fetchedTasks.Todo.filter((task) => task.status === "Todo");
+    const inProgress = fetchedTasks.InProgress.filter(
+      (task) => task.status === "InProgress"
+    );
+    const completed = fetchedTasks.Completed.filter(
+      (task) => task.status === "Completed"
+    );
+
+    const todoCount = todo.length;
+    const inProgressCount = inProgress.length;
+    const completedCount = completed.length;
+
+    isSetCount({todoCount, inProgressCount, completedCount});
+
+  }, [tasks]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
-  const navigate = useNavigate ();
+  const navigate = useNavigate();
 
   const getTaskData = async () => {
     const token = localStorage.getItem("token");

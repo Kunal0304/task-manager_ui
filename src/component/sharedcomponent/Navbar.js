@@ -156,28 +156,45 @@ export default function Navbar({ name, role }) {
               </div>
               {toggleIcon && (
                 <div
-                  className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                  className="absolute right-5 z-10 mt-2 w-40 origin-top-right rounded-md bg-slate-100 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="user-menu-button"
                   tabIndex="-1"
                 >
-                  <div
-                    className="px-4 py-2 text-sm text-gray-700"
-                    style={{ textAlign: "center" }}
-                  >
-                    <strong>{nameDisplay}</strong>
+                  <div className="flex items-center px-2 py-0">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "#D1D5DB",
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "50%",
+                        fontSize: "18px",
+                      }}
+                    >
+                      {firstLetter}
+                    </div>
+                    <div
+                      className="px-4 py-2 text-lg text-gray-700"
+                      style={{ textAlign: "left" }}
+                    >
+                      <strong>{nameDisplay}</strong>
+                    </div>
                   </div>
+                  <hr />
                   <a
                     href
-                    className="block px-4 py-2 text-sm text-gray-700"
+                    className="block px-4 py-2 text-sm text-red-400 font-bold"
                     role="menuitem"
                     tabIndex="-1"
                     id="user-menu-item-2"
                     onClick={handleSignOut}
                     style={{ cursor: "pointer" }}
                   >
-                    Sign out
+                    Log out
                   </a>
                 </div>
               )}
