@@ -26,12 +26,12 @@ export default function Task() {
         }}
       >
         <div>
-          <button
+         {role === "Admin" && <button
             className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-4 rounded"
             onClick={addTaskToggle}
           >
             Add Task
-          </button>
+          </button>}
         </div>
       </div>
       <div style={{ paddingTop: "70px" }} className="px-20">
