@@ -46,7 +46,7 @@ export default function Signin() {
           if (response.data.role === "Admin") {
             navigate("/task");
           } else {
-            navigate("/userassigntask");
+            navigate("/mytask");
           }
         }
       } catch (error) {

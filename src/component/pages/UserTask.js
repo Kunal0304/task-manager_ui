@@ -2,7 +2,7 @@ import React from 'react'
 import Navbar from '../sharedcomponent/Navbar'
 import TaskBoard from '../sharedcomponent/TaskBoard'
 
-export default function UserAssignTask() {
+export default function UserTask() {
     const name = localStorage.getItem('name')
     const role = localStorage.getItem('role')
 

@@ -7,7 +7,7 @@ import Unauthorized from "./component/pages/Unauthorized"
 import User from './component/pages/User';
 import Notfound from "./component/pages/NotFound"
 import Task from './component/pages/Task';
-import UserAssignTask from './component/pages/UserAssignTask';
+import UserTask from './component/pages/UserTask';
 import AuthRoute from './component/sharedcomponent/AuthRoute';
 
 
@@ -19,7 +19,7 @@ function App() {
         <Route path="/signup" element={<AuthRoute element={<Signup />} />} />
         <Route path="/task" element={<ProtectedRoute role='Admin' element={<Task/>} />} />
         <Route path="/user" element={<ProtectedRoute role='Admin' element={<User/>} />} />
-        <Route path="/userassigntask" element={<ProtectedRoute role='User' element={<UserAssignTask/>} />} />
+        <Route path="/mytask" element={<ProtectedRoute role='User' element={<UserTask/>} />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<Notfound />} />
       </Routes>
