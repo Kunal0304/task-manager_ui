@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../sharedcomponent/Navbar";
 import TaskBoard from "../sharedcomponent/TaskBoard";
 import CustomTaskModal from "../modal/CustomTaskModal";
+import { useNavigate } from "react-router-dom";
 
 export default function Task() {
   const name = localStorage.getItem("name");
   const role = localStorage.getItem("role");
   const [addTask, setAddTask] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!name || !role) {
+      navigate("/");
+    }
+  }, [name, role]);
 
   const addTaskToggle = () => {
     setAddTask((prev) => !prev);
