@@ -1,15 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { getTask, updateTask, deleteTaskAPI } from '../util/api';
-import { FaEdit, FaTrash } from 'react-icons/fa';
-import EditTaskModal from '../modal/EditTaskModal';
-import SearchFilter from './SearchFilter';
+import React, { useEffect, useState } from "react";
+import { useDrag, useDrop } from "react-dnd";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { getTask, updateTask, deleteTaskAPI } from "../util/api";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import SearchFilter from "./SearchFilter";
+import CustomTaskModal from "../modal/CustomTaskModal";
+import { useNavigate } from "react-router-dom";
 
-const Task = ({ task, index, moveTask, category, openEditModal, deleteTask, role }) => {
+const Task = ({
+  task,
+  index,
+  moveTask,
+  category,
+  openEditModal,
+  deleteTask,
+  role,
+}) => {
   const [{ isDragging }, drag] = useDrag({
-    type: 'TASK',
+    type: "TASK",
     item: { task, index, category },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -17,64 +26,69 @@ const Task = ({ task, index, moveTask, category, openEditModal, deleteTask, role
   });
 
   const formatDate = (date) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(date).toLocaleDateString(undefined, options);
   };
 
   const assignedUsers = Array.isArray(task.assignedUsers)
-    ? task.assignedUsers.join(', ')
+    ? task.assignedUsers.join(", ")
     : task.assignedUsers;
 
   return (
     <div
       ref={drag}
-      className={`bg-white p-4 rounded-lg shadow-md cursor-move transition-opacity duration-300 ease-out ${isDragging ? 'opacity-50' : ''} w-full mb-4`}
+      className={`bg-slate-100 p-4 rounded-lg shadow-md cursor-move transition-opacity duration-300 ease-out ${
+        isDragging ? "opacity-50" : ""
+      } w-full mb-4`}
       style={{
-        border: '2px solid #ddd',
+        border: "2px solid #ddd",
       }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <strong className="text-lg text-gray-600">Title:</strong>
-          <p className="text-xl font-semibold text-gray-800" style={{ wordBreak: 'break-word' }}>
-            {task.title}
-          </p>
-        </div>
-        {role === 'Admin' && <div className="flex space-x-2">
+      {role === "Admin" && (
+        <div className="flex space-x-2 justify-end">
           <FaEdit
-            className="cursor-pointer text-blue-500 hover:text-blue-700"
+            className="cursor-pointer text-slate-800 hover:text-slate-900"
             onClick={() => openEditModal(task)}
           />
           <FaTrash
-            className="cursor-pointer text-red-500 hover:text-red-700"
+            className="cursor-pointer text-slate-600 hover:text-slate-700"
             onClick={() => deleteTask(task.id, category)}
           />
         </div>
-        }
+      )}
+      <div className="flex FLEX items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <strong className="text-lg text-gray-600">Title:</strong>
+          <p
+            className="text-xl font-semibold text-gray-800"
+            style={{ wordBreak: "break-word" }}
+          >
+            {task.title}
+          </p>
+        </div>
       </div>
+
       <div className="mt-2">
-        <strong className="text-gray-600">Description:</strong>
-        <p className="text-sm text-gray-700" style={{ wordBreak: 'break-word' }}>
-          {task.description}
-        </p>
-      </div>
-      <div className="mt-2">
-        <strong className="text-gray-600">Priority:</strong>
+        <strong className="text-gray-600">Priority: </strong>
         <span
-          style={{ wordBreak: 'break-word' }}
-          className={`text-sm font-semibold ${task.priority === 'High'
-              ? 'text-red-500'
-              : task.priority === 'Medium'
-                ? 'text-yellow-500'
-                : 'text-green-500'
-            }`}
+          style={{ wordBreak: "break-word" }}
+          className={`text-sm font-semibold ${
+            task.priority === "High"
+              ? "text-red-600"
+              : task.priority === "Medium"
+              ? "text-yellow-600"
+              : "text-green-700"
+          }`}
         >
           {task.priority}
         </span>
       </div>
+
       <div className="mt-2">
         <strong className="text-gray-600">Due Date:</strong>
-        <span className="text-sm text-gray-600">{formatDate(task.dueDate)}</span>
+        <span className="text-sm text-gray-600">
+          {formatDate(task.dueDate)}
+        </span>
       </div>
       {assignedUsers && (
         <div className="mt-2">
@@ -82,13 +96,29 @@ const Task = ({ task, index, moveTask, category, openEditModal, deleteTask, role
           <span className="text-sm text-gray-700">{assignedUsers}</span>
         </div>
       )}
+      <div className="mt-2">
+        <strong className="text-gray-600">Description:</strong>
+        <p
+          className="text-sm text-gray-700"
+          style={{ wordBreak: "break-word" }}
+        >
+          {task.description}
+        </p>
+      </div>
     </div>
   );
 };
 
-const Column = ({ category, tasks, moveTask, openEditModal, deleteTask, role }) => {
+const Column = ({
+  category,
+  tasks,
+  moveTask,
+  openEditModal,
+  deleteTask,
+  role,
+}) => {
   const [, drop] = useDrop({
-    accept: 'TASK',
+    accept: "TASK",
     drop: (item) => {
       if (item.category !== category) {
         moveTask(item.index, item.category, category);
@@ -99,7 +129,7 @@ const Column = ({ category, tasks, moveTask, openEditModal, deleteTask, role }) 
   return (
     <div
       ref={drop}
-      className="flex-1 p-4 bg-gray-50 rounded-lg shadow-lg relative min-h-[400px] border-2 border-gray-300 mb-4 sm:mb-0 sm:w-full"
+      className="flex-1 p-4 bg-slate-300 rounded-lg shadow-lg relative min-h-[400px] border-2 border-gray-300 mb-4 sm:mb-0 sm:w-full max-w-[350px]"
     >
       <h2 className="text-xl font-semibold text-center mb-4">{category}</h2>
       <div className="flex flex-col items-center space-y-4">
@@ -126,22 +156,41 @@ const Column = ({ category, tasks, moveTask, openEditModal, deleteTask, role }) 
   );
 };
 
-
-const TaskBoard = ({ addTask, role }) => {
+const TaskBoard = ({ addTask, role, isSetCount }) => {
   const [tasks, setTasks] = useState({
     Todo: [],
     InProgress: [],
     Completed: [],
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  useEffect(() => {
+    const fetchedTasks = tasks;
+    console.log(fetchedTasks);
+    const todo = fetchedTasks.Todo.filter((task) => task.status === "Todo");
+    const inProgress = fetchedTasks.InProgress.filter(
+      (task) => task.status === "InProgress"
+    );
+    const completed = fetchedTasks.Completed.filter(
+      (task) => task.status === "Completed"
+    );
+
+    const todoCount = todo.length;
+    const inProgressCount = inProgress.length;
+    const completedCount = completed.length;
+
+    isSetCount({todoCount, inProgressCount, completedCount});
+
+  }, [tasks]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const navigate = useNavigate();
 
   const getTaskData = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     const headers = {
       Authorization: `Bearer ${token}`,
     };
@@ -152,14 +201,19 @@ const TaskBoard = ({ addTask, role }) => {
         const fetchedTasks = response.data;
 
         const organizedTasks = {
-          Todo: fetchedTasks.filter((task) => task.status === 'Todo'),
-          InProgress: fetchedTasks.filter((task) => task.status === 'InProgress'),
-          Completed: fetchedTasks.filter((task) => task.status === 'Completed'),
+          Todo: fetchedTasks.filter((task) => task.status === "Todo"),
+          InProgress: fetchedTasks.filter(
+            (task) => task.status === "InProgress"
+          ),
+          Completed: fetchedTasks.filter((task) => task.status === "Completed"),
         };
 
         setTasks(organizedTasks);
       }
     } catch (error) {
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
       console.log(error);
     }
   };
@@ -179,10 +233,14 @@ const TaskBoard = ({ addTask, role }) => {
       const matchesSearch =
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.assignedUsers.join(', ').toLowerCase().includes(searchQuery.toLowerCase());
+        task.assignedUsers
+          .join(", ")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
-      const matchesPriority =
-        priorityFilter ? task.priority === priorityFilter : true;
+      const matchesPriority = priorityFilter
+        ? task.priority === priorityFilter
+        : true;
 
       const matchesStatus = statusFilter ? task.status === statusFilter : true;
 
@@ -207,10 +265,10 @@ const TaskBoard = ({ addTask, role }) => {
     });
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const headers = {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       };
 
       const data = {
@@ -228,7 +286,10 @@ const TaskBoard = ({ addTask, role }) => {
         setTasks(originalTasks);
       }
     } catch (error) {
-      console.log('Error updating task:', error);
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
+      console.log("Error updating task:", error);
       setTasks(originalTasks);
     }
   };
@@ -244,7 +305,7 @@ const TaskBoard = ({ addTask, role }) => {
     });
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const headers = {
         Authorization: `Bearer ${token}`,
       };
@@ -255,7 +316,10 @@ const TaskBoard = ({ addTask, role }) => {
         setTasks(originalTasks);
       }
     } catch (error) {
-      console.error('Error deleting task:', error);
+      if (error.response && error.response.status === 401) {
+        navigate("/unauthorized");
+      }
+      console.error("Error deleting task:", error);
       setTasks(originalTasks);
     }
   };
@@ -283,7 +347,7 @@ const TaskBoard = ({ addTask, role }) => {
         />
 
         <div className="flex flex-col sm:flex-row sm:space-x-6 overflow-x-auto justify-center">
-          {['Todo', 'InProgress', 'Completed'].map((category) => (
+          {["Todo", "InProgress", "Completed"].map((category) => (
             <Column
               key={category}
               category={category}
@@ -298,17 +362,14 @@ const TaskBoard = ({ addTask, role }) => {
       </div>
 
       {isModalOpen && (
-        <EditTaskModal
-          editTaskToggle={closeModal}
+        <CustomTaskModal
+          toggleModal={closeModal}
           editTask={taskToEdit}
-          taskId={taskToEdit.id}
-          toRefresh={getTaskData}
+          getTaskData={getTaskData}
         />
       )}
     </DndProvider>
   );
 };
-
-
 
 export default TaskBoard;

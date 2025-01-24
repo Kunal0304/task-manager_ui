@@ -2,12 +2,12 @@ import axios from "axios"
 
 
 const addAdmin = async (data) => {
-    const response = await axios.post(`${process.env.REACT_APP_URL}/signup`, data)
+    const response = await axios.post(`${process.env.REACT_APP_URL}/auth/signup`, data)
     return response
 }
 
 const signIn = async (data) => {
-    const response = await axios.post(`${process.env.REACT_APP_URL}/signin`, data)
+    const response = await axios.post(`${process.env.REACT_APP_URL}/auth/signin`, data)
     return response
 }
 

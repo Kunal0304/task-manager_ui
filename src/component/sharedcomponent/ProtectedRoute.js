@@ -1,15 +1,20 @@
-import React from 'react'
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 
+const ProtectedRoute = ({ roles, element }) => {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
 
-export default function ProtectedRoute({ role, element }) {
 
-    const roleLocal = localStorage.getItem('role');
-    const token = localStorage.getItem('token');
-    if (roleLocal === role && token) {
-        return element;
-    }
-    else {
-        return <Navigate to="/unauthorized" />;
-    }
-}
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (roles && !roles.includes(role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return element;
+};
+
+export default ProtectedRoute;
