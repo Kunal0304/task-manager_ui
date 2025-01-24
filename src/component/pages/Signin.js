@@ -43,10 +43,8 @@ export default function Signin() {
           localStorage.setItem("name", response.data.name);
           setAlertMessage(response.data.message);
           setStatuscode(response.status);
-          if (response.data.role === "Admin") {
+          if (response.data.role) {
             navigate("/task");
-          } else {
-            navigate("/mytask");
           }
         }
       } catch (error) {
