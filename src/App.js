@@ -13,10 +13,15 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes for Non-Authenticated Users */}
         <Route path="/" element={<AuthRoute element={<Signin />} />} />
         <Route path="/signup" element={<AuthRoute element={<Signup />} />} />
-        <Route path="/user" element={<ProtectedRoute role='Admin' element={<User/>} />} />
-        <Route path="/task" element={<Task/>}/>
+
+        {/* Protected Routes */}
+        <Route path="/user" element={<ProtectedRoute roles={['Admin']} element={<User />} />} />
+        <Route path="/task" element={<ProtectedRoute roles={['Admin', 'User']} element={<Task />} />} />
+
+        {/* Unauthorized and Fallback Routes */}
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<Notfound />} />
       </Routes>
