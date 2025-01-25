@@ -1,11 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
+import io from "socket.io-client";
 
 export default function Navbar({ name, role }) {
   const navigate = useNavigate();
   const [toggleIcon, setToggleIcon] = useState(false);
+  const [notificationToggle, setNotificationToggle] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+
   const [toggleMenu, setToggleMenu] = useState(false);
+  const ENDPOINT = "http://localhost:4000";
+  const socket = io(ENDPOINT);
 
   const nameDisplay = name;
   const firstLetter = name?.charAt(0).toUpperCase();
@@ -19,9 +27,38 @@ export default function Navbar({ name, role }) {
   const toggleIconFunc = () => {
     setToggleIcon((prev) => !prev);
   };
+
+  const toggleNotificationFunc = () => {
+    setNotificationToggle((prev) => !prev);
+    if (!notificationToggle) {
+      setUnreadCount(0);
+    }
+  };
   const toggleMenuFunc = () => {
     setToggleMenu((prev) => !prev);
   };
+
+  useEffect(() => {
+    socket.on("taskStatusUpdated", (data) => {
+      if (role === "Admin" && data.updatedBy.role !== "Admin") {
+        setNotifications((prev) => [...prev, `Task status updated: ${data.task.status} by ${data.updatedBy.name}`]);
+        setUnreadCount((prev) => prev + 1);
+      }
+    });
+
+    socket.on("newTaskCreated", (data) => {
+      if (role !== "Admin") {
+        setNotifications((prev) => [...prev, `You have been assigned a new task: ${data.task.title}`]);
+        setUnreadCount((prev) => prev + 1);
+      }
+    });
+
+    return () => {
+      socket.off("taskStatusUpdated");
+      socket.off("newTaskCreated");
+    };
+  }, [role]);
+
   return (
     <nav className="bg-slate-700">
       <div className=" max-w-8xl ">
@@ -75,10 +112,9 @@ export default function Navbar({ name, role }) {
                   <NavLink
                     to="/task"
                     className={({ isActive }) =>
-                      `rounded-md px-3 py-2 text-lg font-medium ${
-                        isActive
-                          ? "bg-gray-900 text-white"
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      `rounded-md px-3 py-2 text-lg font-medium ${isActive
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
                       }`
                     }
                     aria-current="page"
@@ -90,10 +126,9 @@ export default function Navbar({ name, role }) {
                   <NavLink
                     to="/user"
                     className={({ isActive }) =>
-                      `rounded-md px-3 py-2 text-lg font-medium ${
-                        isActive
-                          ? "bg-gray-900 text-white"
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      `rounded-md px-3 py-2 text-lg font-medium ${isActive
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
                       }`
                     }
                   >
@@ -107,7 +142,13 @@ export default function Navbar({ name, role }) {
             <button
               type="button"
               className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+              onClick={toggleNotificationFunc}
             >
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                  {unreadCount}
+                </span>
+              )}
               <span className="absolute -inset-1.5"></span>
               <span className="sr-only">View notifications</span>
               <svg
@@ -126,6 +167,50 @@ export default function Navbar({ name, role }) {
                 />
               </svg>
             </button>
+            {notificationToggle && (
+              <div
+                className="absolute top-0 right-5 z-10 mt-14 w-64 origin-top-right rounded-md bg-slate-100 py-1 shadow-lg ring-1 ring-black/5 focus:outline-none overflow-y-auto max-h-64"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="user-menu-button"
+                tabIndex="-1"
+              >
+                <div className="flex items-center px-2 py-0">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#D1D5DB",
+                      width: "30px",
+                      height: "30px",
+                      borderRadius: "50%",
+                      fontSize: "18px",
+                    }}
+                  >
+                    {firstLetter}
+                  </div>
+                  <div
+                    className="px-4 py-2 text-lg text-gray-700"
+                    style={{ textAlign: "left" }}
+                  >
+                    <strong>{nameDisplay}</strong>
+                  </div>
+                </div>
+                <div className="flex flex-direction items-center px-2 py-0">
+                  <ul>
+                    {notifications.length ? notifications.map((notification, index) => (
+                      <>
+                      <li key={index} className="p-2 border-b border-gray-200">
+                        {notification}
+                      </li>
+                      {notifications.length - 1 !== index && <hr />}
+                      </>
+                    )): <li className="p-2 border-b border-gray-200">No notifications</li>}
+                  </ul>
+                </div>
+              </div>
+            )}
             <div className="relative ml-3 pr-5">
               <div>
                 <button
@@ -211,10 +296,9 @@ export default function Navbar({ name, role }) {
             <NavLink
               to="/task"
               className={({ isActive }) =>
-                `block rounded-md   px-3 py-2 text-base font-medium ${
-                  isActive
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                `block rounded-md   px-3 py-2 text-base font-medium ${isActive
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`
               }
             >
@@ -225,10 +309,9 @@ export default function Navbar({ name, role }) {
             <NavLink
               to="/user"
               className={({ isActive }) =>
-                `block rounded-md  px-3 py-2  text-base font-medium ${
-                  isActive
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                `block rounded-md  px-3 py-2  text-base font-medium ${isActive
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`
               }
             >

@@ -7,6 +7,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import SearchFilter from "./SearchFilter";
 import CustomTaskModal from "../modal/CustomTaskModal";
 import { useNavigate } from "react-router-dom";
+import io from "socket.io-client";
 
 const Task = ({
   task,
@@ -163,9 +164,11 @@ const TaskBoard = ({ addTask, role, isSetCount }) => {
     Completed: [],
   });
 
+  const ENDPOINT = "http://localhost:4000";
+  const socket = io(ENDPOINT);
+
   useEffect(() => {
     const fetchedTasks = tasks;
-    console.log(fetchedTasks);
     const todo = fetchedTasks.Todo.filter((task) => task.status === "Todo");
     const inProgress = fetchedTasks.InProgress.filter(
       (task) => task.status === "InProgress"
@@ -209,6 +212,7 @@ const TaskBoard = ({ addTask, role, isSetCount }) => {
         };
 
         setTasks(organizedTasks);
+        socket.emit("newTaskCreated", fetchedTasks);
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -282,7 +286,11 @@ const TaskBoard = ({ addTask, role, isSetCount }) => {
 
       const response = await updateTask(movedTask.id, data, headers);
 
-      if (response.status !== 200) {
+      if (response.status === 200) {
+        if(role === "User"){
+          socket.emit("taskStatusUpdated", data);
+        }
+      } else {
         setTasks(originalTasks);
       }
     } catch (error) {
