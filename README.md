@@ -20,19 +20,19 @@ A collaborative task management application that allows users to create, assign,
 ### Admin Credentials
 
 - **Email Address**: admin@gmail.com
-- **Password**: Sushant@123
+- **Password**: admin@123
 
 ### User Credentials
 
-- **Email**: user1@gmail.com
-  **Password**: Sushant@123
+- **Email**: testuser01@gmail.com
+  **Password**: user01@123
 
-- **Email**: user2@gmail.com
-  **Password**: Sushant@123
+- **Email**: testuser02@gmail.com
+  **Password**: user02@123
 
 ## Frontend URL
 
-[Visit the Application](https://task-management-app-live.netlify.app)
+[Visit the Application](https://task-manager-ui-brown.vercel.app)
 
 
 
@@ -40,18 +40,18 @@ A collaborative task management application that allows users to create, assign,
 
 ### Prerequisites
 
-- Node.js (v14 or later)
+- Node.js (v16 or later)
 - npm or yarn
 - A .env file with the following variables:
   ```env
-  REACT_APP_API_URL=https://task-manager-backend-7nni.onrender.com
+  REACT_APP_API_URL=https://task-manager-apis-kjd4.onrender.com
   ```
 
 ### Steps to Run Locally
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Sushantshekharzz/task-manager-frontend.git
+   git clone https://github.com/Kunal0304/task-manager_ui.git
    cd task-manager-frontend
    ```
 2. **Install dependencies**:
@@ -78,7 +78,7 @@ npm test
 
 ## Deployment Link
 
-[Visit the Deployed Application](https://task-management-app-live.netlify.app)
+[Visit the Deployed Application](https://task-manager-ui-brown.vercel.app)
 
 ---
 
